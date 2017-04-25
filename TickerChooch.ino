@@ -43,7 +43,7 @@
 #define STATE_PAUSE 4
 
 // motor object
-Stepper motor(STEPS, STEP_AP, STEP_AN, STEP_BP, STEP_BN);
+Stepper motor(STEPS_PER_REV, STEP_AP, STEP_AN, STEP_BP, STEP_BN);
 
 // data entered vars
 int distance     = 0;   // configured distance to travel (in mm)
