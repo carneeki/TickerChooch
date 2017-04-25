@@ -13,7 +13,6 @@
 #include <Stepper.h>
 #include <limits.h>
 #include "PCD8544.h"
-//#include "PCD8544.cpp"
 
 // TODO: Change all these values to suit
 

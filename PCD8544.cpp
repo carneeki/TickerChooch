@@ -16,13 +16,14 @@
 #include "PCD8544.h"
 #include "font.h"
 
-
-
 void LcdCharacter(char character)
 {
   LcdWrite(LCD_D, 0x00);
-  for (int index = 0; index < 5; index++)
-    LcdWrite(LCD_D, ASCII[character - 0x20][index]);
+
+  uint8_t buf[5]=""; // buffer the character to send
+  memcpy(buf, ASCII[character -0x20], sizeof(buf));
+  for(int i=0; i<5; i++)
+    LcdWrite(LCD_D, buf[i]);
 
   LcdWrite(LCD_D, 0x00);
 }
