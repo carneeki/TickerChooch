@@ -55,7 +55,7 @@ SPEED: »████████
   DIST: 1000 mm
  PAUSE:   60 s
 ╔══════════════╗
-║ PAUSED: 03s  ║
+║ PAUSED:  03 s║
 ╚══════════════╝
 ```
 Note that the paused timer counts down the seconds until movement again.
