@@ -23,7 +23,7 @@ You'll just have to wait and see!
 
 ### Accepting data:
 ```
-SPEED: »███████
+SPEED: »████████
  DIST: 1000 mm
 PAUSE:   60 s
 ╔══════════════╗
@@ -39,7 +39,7 @@ clear the carriage.
 
 ### During movements
 ```
-SPEED: »███████
+SPEED: »████████
  DIST: 1000 mm
 PAUSE:   60 s
 ╔══════════════╗
@@ -51,7 +51,7 @@ each cycle.
 
 ### When paused
 ```
- SPEED: »███████
+SPEED: »████████
   DIST: 1000 mm
  PAUSE:   60 s
 ╔══════════════╗
