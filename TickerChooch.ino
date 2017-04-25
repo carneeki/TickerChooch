@@ -138,6 +138,7 @@ void pause()
   else
     nextState = STATE_RUN;
 }
+void setup() {}
 
 void loop()
 {
