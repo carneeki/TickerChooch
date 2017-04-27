@@ -9,11 +9,12 @@
  * For Emma's Spare Room Machine Shop <missemmajade@gmail.com>                 *
  *                                                                             *
  ******************************************************************************/
-
 #include <Stepper.h>
 #include <limits.h>
+#include <stdlib.h>
 #include "font.h"
 #include "PCD8544.h"
+#include "drawLCD.h"
 
 // TODO: Change all these values to suit
 
@@ -28,7 +29,8 @@
 #define SPEED         1000   // Speed in mm per minute
 #define DIST_PER_REV    62.5 // Distance travelled for 1 rev of stepper shaft
 
-#define SW_LIMIT        11   // Limit switch pin is pulled HIGH when at limit
+#define SW_LIMIT         2   // Limit switch pin is pulled HIGH when at limit
+                             // also - use pin 2 or 3 so there's an interrupt
 #define SW_DIR_FWD      12   // Forwards direction is pulled HIGH for forward
 #define SW_DIR_REV      13   // Reverse direction is pulled HIGH for reverse
 #define SW_START         1   // Start / stop push button
@@ -70,9 +72,12 @@ int currentState   = 0;  // current state for state machine
 int nextState      = 0;  // state to jump to
 
 // working and scratch values
+#ifndef SCRATCH
+#define SCRATCH
 char buf[17]       = ""; // buffer for text to go to LCD
 unsigned long prev = 0;  // previous time the loop() ran
 bool doPaint       = false; // update the LCD screen?
+#endif
 
 /**
  * Calculate the number of steps required to travel a given distance
@@ -124,6 +129,155 @@ bool getDir()
 
   return fwd;
 }
+
+/**
+ * Wrapper for Stepper.step(int) because it is blocking and won't
+ * allow use of limit switches (well maybe an ISR could be used?)
+ */
+void chooch()
+{
+  if( remainingSteps >= 1 && !digitalRead(SW_LIMIT) )
+  {
+    motor.step(10);
+    remainingSteps -= 10;
+  }
+
+  // prevent remainingSteps from being less than 0
+  if(remainingSteps < 0)
+    remainingSteps = 0;
+
+  // if limit switch is hit, update state machine to go to [STATE_DATA]
+  if(digitalRead(SW_LIMIT))
+    nextState = STATE_DATA;
+  else
+    nextState = STATE_PAUSE;
+}
+
+/**
+ * Wrapper for delay(int). Also permit limit switches to break the cycle.
+ */
+void pause()
+{
+  if( remainingTime >= 1 && !digitalRead(SW_LIMIT) )
+  {
+    delay(1000);
+    remainingTime--;
+  }
+
+  // prevent remainingTime from being less than 0
+  if(remainingTime < 0)
+    remainingTime = 0;
+
+  // if limit switch is hit, update state machine to go to [read data]
+  if(digitalRead(SW_LIMIT))
+    nextState = STATE_DATA;
+  else
+    nextState = STATE_RUN;
+}
+void setup()
+{
+  LcdInitialise();
+  LcdClear();
+}
+
+void loop()
+{
+  // should I paint the screen?
+  if(millis() - prev > UPDATE_TIME )
+  {
+    doPaint = true;
+    prev = millis();
+  }
+  else
+    doPaint = false;
+
+  /* State machine:
+   *  [STATE_INIT] -> [STATE_DATA] -> [STATE_RUN] <-> [STATE_PAUSE]
+   *
+   * If a limit switch is hit in [STATE_RUN] or [STATE_PAUSE], then next state
+   * is set to [STATE_DATA].
+   */
+  switch(nextState)
+  {
+    if(doPaint)
+      LcdClear();
+
+    case STATE_INIT:
+      nextState = STATE_DATA;
+
+      if(doPaint)
+      {
+        drawInit1();
+        delay(5000);
+
+        drawInit2();
+        delay(2000);
+      }
+    break;
+
+    case STATE_DATA:
+      distance = getDistance();
+      pauseTime = getPauseTime();
+      remainingSteps = calcSteps(distance);
+
+      if(doPaint)
+      {
+
+        drawSpeed();
+        drawPause();
+        drawDistance();
+        drawBoxTop();
+
+        drawStart();
+
+        drawBoxBottom();
+      }
+
+      if(digitalRead(SW_START))
+        nextState = STATE_RUN;
+    break;
+
+    case STATE_RUN:
+      if(doPaint)
+      {
+        drawSpeed();
+        drawPause();
+        drawDistance();
+        drawBoxTop();
+
+        drawChooching();
+
+        drawBoxBottom();
+      }
+
+      chooch(); // chooch is blocking
+    break;
+
+    case STATE_PAUSE:
+      if(doPaint)
+      {
+        drawSpeed();
+        drawPause();
+        drawDistance();
+        drawBoxTop();
+
+        drawPauses();
+
+        drawBoxBottom();
+      }
+
+      pause(); // pause is blocking (contains delay())
+    break;
+
+    default:
+      // we shouldn't ever get to this point. enter AvE mode.
+      // panic. call for help.
+      drawPanic();
+      delay(INT_MAX);
+    break;
+  }
+}
+
 
 void drawSpeed()
 {
@@ -251,149 +405,4 @@ void drawPanic()
   LcdString(buf);
 
   drawBoxBottom();
-}
-
-/**
- * Wrapper for Stepper.step(int) because it is blocking and won't
- * allow use of limit switches (well maybe an ISR could be used?)
- */
-void chooch()
-{
-  if( remainingSteps >= 1 && !digitalRead(SW_LIMIT) )
-  {
-    motor.step(10);
-    remainingSteps -= 10;
-  }
-
-  // prevent remainingSteps from being less than 0
-  if(remainingSteps < 0)
-    remainingSteps = 0;
-
-  // if limit switch is hit, update state machine to go to [STATE_DATA]
-  if(digitalRead(SW_LIMIT))
-    nextState = STATE_DATA;
-  else
-    nextState = STATE_PAUSE;
-}
-
-/**
- * Wrapper for delay(int). Also permit limit switches to break the cycle.
- */
-void pause()
-{
-  if( remainingTime >= 1 && !digitalRead(SW_LIMIT) )
-  {
-    delay(1000);
-    remainingTime--;
-  }
-
-  // prevent remainingTime from being less than 0
-  if(remainingTime < 0)
-    remainingTime = 0;
-
-  // if limit switch is hit, update state machine to go to [read data]
-  if(digitalRead(SW_LIMIT))
-    nextState = STATE_DATA;
-  else
-    nextState = STATE_RUN;
-}
-void setup()
-{
-  LcdInitialise();
-  LcdClear();
-}
-
-void loop()
-{
-  // should I paint the screen?
-  if(millis() - prev > UPDATE_TIME )
-  {
-    doPaint = true;
-    prev = millis();
-  }
-  else
-    doPaint = false;
-
-  /* State machine:
-   *  [STATE_INIT] -> [STATE_DATA] -> [STATE_RUN] <-> [STATE_PAUSE]
-   *
-   * If a limit switch is hit in [STATE_RUN] or [STATE_PAUSE], then next state
-   * is set to [STATE_DATA].
-   */
-  switch(nextState)
-  {
-    if(doPaint)
-      LcdClear();
-
-    case STATE_INIT:
-      nextState = STATE_DATA;
-
-      if(doPaint)
-      {
-        drawInit1();
-        delay(5000);
-
-        drawInit2();
-        delay(2000);
-      }
-    break;
-
-    case STATE_DATA:
-      distance = getDistance();
-      pauseTime = getPauseTime();
-      remainingSteps = calcSteps(distance);
-
-      if(doPaint)
-      {
-
-        drawSpeed();
-        drawPause();
-        drawDistance();
-        drawBoxTop();
-
-        drawStart();
-
-        drawBoxBottom();
-      }
-    break;
-
-    case STATE_RUN:
-      if(doPaint)
-      {
-        drawSpeed();
-        drawPause();
-        drawDistance();
-        drawBoxTop();
-
-        drawChooching();
-
-        drawBoxBottom();
-      }
-
-      chooch(); // chooch is blocking
-    break;
-
-    case STATE_PAUSE:
-      if(doPaint)
-      {
-        drawSpeed();
-        drawPause();
-        drawDistance();
-        drawBoxTop();
-
-        drawPauses();
-
-        drawBoxBottom();
-      }
-
-      pause(); // pause is blocking (contains delay())
-    break;
-
-    default:
-      // we shouldn't ever get to this point. enter AvE mode.
-      // panic. call for help.
-      drawPanic();
-      delay(INT_MAX);
-    break;
-  }
 }

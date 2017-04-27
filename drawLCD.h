@@ -1,0 +1,11 @@
+void drawSpeed();
+void drawDistance();
+void drawPause();
+void drawBoxTop();
+void drawBoxBottom();
+void drawChooching();
+void drawStart();
+void drawPauses();
+void drawInit1();
+void drawInit2();
+void drawPanic();
