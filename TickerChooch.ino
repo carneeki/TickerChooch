@@ -176,6 +176,16 @@ void pause()
 }
 void setup()
 {
+  // attach the limit switch to an interrupt so we can pause
+  // when the carriage reaches the end of the rail
+  pinMode(SW_LIMIT, INPUT);
+  attachInterrupt(digitalPinToInterrupt(SW_LIMIT), eStop, RISING);
+
+  // set up other switch inputs
+  pinMode(SW_START, INPUT);
+  pinMode(SW_DIR_FWD, INPUT);
+  pinMode(SW_DIR_REV, INPUT);
+
   LcdInitialise();
   LcdClear();
 }
@@ -276,6 +286,11 @@ void loop()
       delay(INT_MAX);
     break;
   }
+}
+
+void eStop()
+{
+  nextState = STATE_DATA;
 }
 
 
