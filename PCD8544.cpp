@@ -38,11 +38,13 @@ void LcdInitialise()
 {
   pinMode(PIN_SCE, OUTPUT);
   pinMode(PIN_RESET, OUTPUT);
+  pinMode(PIN_CS, OUTPUT);
   pinMode(PIN_DC, OUTPUT);
   pinMode(PIN_SDIN, OUTPUT);
   pinMode(PIN_SCLK, OUTPUT);
   digitalWrite(PIN_RESET, LOW);
   digitalWrite(PIN_RESET, HIGH);
+  digitalWrite(PIN_CS, LOW);
   LcdWrite(LCD_C, 0x21 );  // LCD Extended Commands.
   LcdWrite(LCD_C, 0xB1 );  // Set LCD Vop (Contrast).
   LcdWrite(LCD_C, 0x04 );  // Set Temp coefficent. //0x04
