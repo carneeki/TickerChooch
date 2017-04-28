@@ -13,7 +13,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include "font.h"
-#include "PCD8544.h"
+#include "LCD4884.h"
 #include "drawLCD.h"
 
 // TODO: Change all these values to suit
@@ -183,14 +183,14 @@ void setup()
 
   // attach the start/pause switch to an interrupt so we can pause / start
   pinMode(SW_START, INPUT);
-  attachInterrupt(digitalPinToInterrupt(SW_PAUSE), startPause, RISING);
+  attachInterrupt(digitalPinToInterrupt(SW_START), startPause, RISING);
 
   // set up other switch inputs
   pinMode(SW_DIR_FWD, INPUT);
   pinMode(SW_DIR_REV, INPUT);
 
-  LcdInitialise();
-  LcdClear();
+  lcd.init();
+  lcd.clear();
 }
 
 void loop()
@@ -213,7 +213,7 @@ void loop()
   switch(nextState)
   {
     if(doPaint)
-      LcdClear();
+      lcd.clear();
 
     case STATE_INIT:
       nextState = STATE_DATA;
@@ -316,7 +316,7 @@ void drawSpeed()
   for(int i = 0; i< (analogRead(KNOB_SPEED)+1)/204; i++)
     strcat(buf, (const char*) 0xdb);
 
-  LcdString(buf);
+  lcd.writeLine(0, buf);
 }
 
 void drawDistance()
@@ -337,7 +337,7 @@ void drawDistance()
 
   strcat(buf, " mm  ");
 
-  LcdString(buf);
+  lcd.writeLine(1, buf);
 }
 
 void drawPause()
@@ -358,30 +358,30 @@ void drawPause()
 
   strOut.toCharArray(buf,sizeof(strOut));
 
-  LcdString(buf);
+  lcd.writeLine(2, buf);
 }
 
 void drawBoxTop()
 {
   char buf[] = "╔══════════════╗";
-  LcdString(buf);
+  lcd.writeLine(3, buf);
 }
 void drawBoxBottom()
 {
   char buf[] = "╚══════════════╝";
-  LcdString(buf);
+  lcd.writeLine(4, buf);
 }
 
 void drawChooching()
 {
   char buf[] = "║  CHOOCHING!  ║";
-  LcdString(buf);
+  lcd.writeLine(5, buf);
 }
 
 void drawStart()
 {
   char buf[] = "║ PRESS  START ║";
-  LcdString(buf);
+  lcd.writeLine(4, buf);
 }
 
 void drawPauses()
@@ -399,19 +399,19 @@ void drawPauses()
 
   strOut.toCharArray(buf,sizeof(strOut));
 
-  LcdString(buf);
+  lcd.writeLine(4, buf);
 }
 
 void drawInit1()
 {
   for(unsigned int i=0; i< sizeof(bm0); i++)
-    LcdWrite(LCD_D, pgm_read_byte_near(bm1[i]));
+    lcd.writeByte(true, pgm_read_byte_near(bm1[i]));
 }
 
 void drawInit2()
 {
   for(unsigned int i=0; i< sizeof(bm0); i++)
-    LcdWrite(LCD_D, pgm_read_byte_near(bm0[i]));
+    lcd.writeByte(true, pgm_read_byte_near(bm0[i]));
 }
 
 void drawPanic()
@@ -420,16 +420,16 @@ void drawPanic()
   drawBoxTop();
 
   strcpy(buf, "║              ║");
-  LcdString(buf);
+  lcd.writeLine(1, buf);
 
   strcpy(buf, "║    PANIC!    ║");
-  LcdString(buf);
+  lcd.writeLine(2, buf);
 
   strcpy(buf,"║      :(      ║");
-  LcdString(buf);
+  lcd.writeLine(3, buf);
 
   strcpy(buf,"║              ║");
-  LcdString(buf);
+  lcd.writeLine(4, buf);
 
   drawBoxBottom();
 }
