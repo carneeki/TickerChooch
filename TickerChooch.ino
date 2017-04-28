@@ -48,7 +48,7 @@
 #define STATE_RUN        2   // run state - carriage moves
 #define STATE_PAUSE      3   // pause state between movements
 
-#define UPDATE_TIME    100   // number of millis() between screen updates
+#define UPDATE_TIME     50   // number of millis() between screen updates
 
 // motor object
 Stepper motor(STEPS_PER_REV, STEP_AP, STEP_AN, STEP_BP, STEP_BN);
@@ -74,7 +74,6 @@ int nextState      = STATE_INIT;  // state to jump to
 // working and scratch values
 #ifndef SCRATCH
 #define SCRATCH
-char buf[17]       = ""; // buffer for text to go to LCD
 unsigned long prev = 0;  // previous time the loop() ran
 bool doPaint       = false; // update the LCD screen?
 #endif
@@ -315,6 +314,7 @@ void startPause()
 
 void drawSpeed()
 {
+  char buf[17]       = ""; // buffer for text to go to LCD
   strcpy(buf, "SPEED: ");
 
   strcat(buf, (const char*) ((fwd)? 0xaf : 0xae) );
@@ -329,7 +329,8 @@ void drawSpeed()
 
 void drawDistance()
 {
-  strcpy(buf, " DIST:    ");
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, " DIST:          ");
 
   // 3 digits long
   if(distance < 1000 && distance >= 100)
@@ -351,21 +352,19 @@ void drawDistance()
 
 void drawPause()
 {
-  String strOut = "PAUSE: ";
-  char buf[] ="";
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, "PAUSE:          ");
 
-  if(pauseTime < 1000)
-    strOut += " ";
+  if(pauseTime < 1000 && pauseTime > 100)
+    itoa(pauseTime, &buf[7], 10);
 
-  if(pauseTime <  100)
-    strOut += " ";
+  if(pauseTime <  100 && pauseTime >  10)
+    itoa(pauseTime, &buf[8], 10);
 
-  if(pauseTime <   10)
-    strOut += " ";
+  if(pauseTime <   10 && pauseTime >=  0)
+    itoa(pauseTime, &buf[9], 10);
 
-  strOut += pauseTime + " s   ";
-
-  strOut.toCharArray(buf,sizeof(strOut));
+  strcat(buf, " s");
 
   lcd.writeLine(2, buf);
   Serial.println(buf);
@@ -373,45 +372,52 @@ void drawPause()
 
 void drawBoxTop()
 {
-  char buf[] = "╔══════════════╗";
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, "╔══════════════╗");
   lcd.writeLine(3, buf);
   Serial.println(buf);
 }
 void drawBoxBottom()
 {
-  char buf[] = "╚══════════════╝";
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, "╚══════════════╝");
   lcd.writeLine(4, buf);
   Serial.println(buf);
 }
 
 void drawChooching()
 {
-  char buf[] = "║  CHOOCHING!  ║";
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, "║  CHOOCHING!  ║");
   lcd.writeLine(5, buf);
   Serial.println(buf);
 }
 
 void drawStart()
 {
-  char buf[] = "║ PRESS  START ║";
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, "║ PRESS  START ║");
   lcd.writeLine(4, buf);
   Serial.println(buf);
 }
 
 void drawPauses()
 {
-  String strOut = "║ PAUSED: ";
-  char buf[] ="";
+  char buf[17]       = ""; // buffer for text to go to LCD
+  strcpy(buf, "║ PRESS  START ║");
+  strcpy(buf, "║ PAUSED:       ");
 
-  if(remainingTime < 100)
-    strOut += " ";
+  if(remainingTime < 1000 && remainingTime > 100)
+    itoa(remainingTime, &buf[7], 10);
 
-  if(remainingTime <  10)
-    strOut += " ";
+  if(remainingTime <  100 && remainingTime >  10)
+    itoa(remainingTime, &buf[8], 10);
 
-  strOut += remainingTime + " s║";
+  if(remainingTime <   10 && remainingTime >=  0)
+    itoa(remainingTime, &buf[9], 10);
 
-  strOut.toCharArray(buf,sizeof(strOut));
+
+  strcat(buf, " s║");
 
   lcd.writeLine(4, buf);
   Serial.println(buf);
@@ -431,7 +437,7 @@ void drawInit2()
 
 void drawPanic()
 {
-  char buf[] ="";
+  char buf[17] = "";
   drawBoxTop();
 
   strcpy(buf, "║              ║");
