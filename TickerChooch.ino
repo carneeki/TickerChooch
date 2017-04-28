@@ -18,7 +18,7 @@
 
 // TODO: Change all these values to suit
 
-// pins 3,4,5,6,7 used for LCD screen
+// pins 2,3,4,5,6,7 used for LCD screen
 #define STEP_AP          8   // Stepper pin A+
 #define STEP_AN          9   // Stepper pin A-
 #define STEP_BP         10   // Stepper pin B+
@@ -29,11 +29,11 @@
 #define SPEED         1000   // Speed in mm per minute
 #define DIST_PER_REV    62.5 // Distance travelled for 1 rev of stepper shaft
 
-#define SW_LIMIT         2   // Limit switch pin is pulled HIGH when at limit
+#define SW_LIMIT        18   // Limit switch pin is pulled HIGH when at limit
                              // also - use pin 2 or 3 so there's an interrupt
 #define SW_DIR_FWD      12   // Forwards direction is pulled HIGH for forward
 #define SW_DIR_REV      13   // Reverse direction is pulled HIGH for reverse
-#define SW_START         1   // Start / stop push button
+#define SW_START        19   // Start / stop push button
 
 #define KNOB_DIST       A0   // Wiper for distance knob
 #define KNOB_PAUSE      A1   // Wiper for pause knob
@@ -181,8 +181,11 @@ void setup()
   pinMode(SW_LIMIT, INPUT);
   attachInterrupt(digitalPinToInterrupt(SW_LIMIT), eStop, RISING);
 
-  // set up other switch inputs
+  // attach the start/pause switch to an interrupt so we can pause / start
   pinMode(SW_START, INPUT);
+  attachInterrupt(digitalPinToInterrupt(SW_PAUSE), startPause, RISING);
+
+  // set up other switch inputs
   pinMode(SW_DIR_FWD, INPUT);
   pinMode(SW_DIR_REV, INPUT);
 
@@ -291,6 +294,13 @@ void loop()
 void eStop()
 {
   nextState = STATE_DATA;
+}
+
+void startPause()
+{
+  // if currently running, go to data entry, else, we probably want to
+  // go to run state
+  nextState = (nextState == STATE_RUN)? STATE_DATA : STATE_RUN;
 }
 
 
