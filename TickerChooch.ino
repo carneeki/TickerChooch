@@ -298,9 +298,11 @@ void eStop()
 
 void startPause()
 {
-  // if currently running, go to data entry, else, we probably want to
-  // go to run state
-  nextState = (nextState == STATE_RUN)? STATE_DATA : STATE_RUN;
+  if(nextState == STATE_DATA)
+    nextState = STATE_PAUSE;
+
+  if(nextState == STATE_RUN)
+    nextState = STATE_DATA;
 }
 
 
