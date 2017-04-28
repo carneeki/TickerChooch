@@ -23,12 +23,12 @@ Date       : 06.01.2012
 #endif
 
 // SPI Interface --- (using Arduino Digital Pin 2,3,4,5,6)
-#define SPI_SCK 2     //Serial Clock(Master Output)
-#define SPI_MOSI 3   //Master Output,Slave Input
-#define LCD_DC  4   //Data/Command(command active low)
-#define SPI_CS  5  //Chip Select,Slave Transmit Enable(active low,Master Output)
-#define LCD_RST 6 //One Reset button
-#define LCD_BL  7//Backlit control (Arduino DIO Pin 7)
+#define SPI_SCK  2 // Serial Clock(Master Output)
+#define SPI_MOSI 3 // Master Output,Slave Input
+#define LCD_DC   4 // Data/Command(command active low)
+#define SPI_CS   5 // Chip Select,Slave Transmit Enable(active low,Master Output)
+#define LCD_RST  6 // One Reset button
+#define LCD_BL   7 // Backlit control (Arduino DIO Pin 7)
 
 
 //display mode -- normal / highlight
@@ -46,7 +46,6 @@ class LCD4884
     void backlight(bool);
     void writeByte(uint8_t, bool);
     void LCD_draw_bmp_pixel(uint8_t, uint8_t, unsigned char map[], uint8_t, uint8_t);
-    void LCD_write_string(uint8_t, uint8_t, char s[]);
     void LCD_write_char(uint8_t);
     void LCD_set_XY(uint8_t, uint8_t);
     void clear(void);

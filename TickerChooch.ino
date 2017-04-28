@@ -43,12 +43,12 @@
 #define PAUSE_MAX       90   // Maximum pause time (seconds)
 #define PAUSE_INCR       1   // # of increments for pause time
 
-#define STATE_INIT       1   // initialisation state - not much really happens
-#define STATE_DATA       2   // data entry and ready state
-#define STATE_RUN        3   // run state - carriage moves
-#define STATE_PAUSE      4   // pause state between movements
+#define STATE_INIT       0   // initialisation state - not much really happens
+#define STATE_DATA       1   // data entry and ready state
+#define STATE_RUN        2   // run state - carriage moves
+#define STATE_PAUSE      3   // pause state between movements
 
-#define UPDATE_TIME     50   // number of millis() between screen updates
+#define UPDATE_TIME    100   // number of millis() between screen updates
 
 // motor object
 Stepper motor(STEPS_PER_REV, STEP_AP, STEP_AN, STEP_BP, STEP_BN);
@@ -69,7 +69,7 @@ int remainingTime  = 0;  //  remaining seconds in this pause() cycle
 
 // state machine vars
 int currentState   = 0;  // current state for state machine
-int nextState      = 0;  // state to jump to
+int nextState      = STATE_INIT;  // state to jump to
 
 // working and scratch values
 #ifndef SCRATCH
@@ -176,6 +176,9 @@ void pause()
 }
 void setup()
 {
+  // TODO: remove me after debugging
+  Serial.begin(115200);
+
   // attach the limit switch to an interrupt so we can pause
   // when the carriage reaches the end of the rail
   pinMode(SW_LIMIT, INPUT);
@@ -200,6 +203,10 @@ void loop()
   {
     doPaint = true;
     prev = millis();
+    Serial.print("millis-prev:");
+    Serial.println(millis()-prev);
+    Serial.print("nextState: ");
+    Serial.println(nextState);
   }
   else
     doPaint = false;
@@ -317,6 +324,7 @@ void drawSpeed()
     strcat(buf, (const char*) 0xdb);
 
   lcd.writeLine(0, buf);
+  Serial.println(buf);
 }
 
 void drawDistance()
@@ -338,6 +346,7 @@ void drawDistance()
   strcat(buf, " mm  ");
 
   lcd.writeLine(1, buf);
+  Serial.println(buf);
 }
 
 void drawPause()
@@ -359,29 +368,34 @@ void drawPause()
   strOut.toCharArray(buf,sizeof(strOut));
 
   lcd.writeLine(2, buf);
+  Serial.println(buf);
 }
 
 void drawBoxTop()
 {
   char buf[] = "╔══════════════╗";
   lcd.writeLine(3, buf);
+  Serial.println(buf);
 }
 void drawBoxBottom()
 {
   char buf[] = "╚══════════════╝";
   lcd.writeLine(4, buf);
+  Serial.println(buf);
 }
 
 void drawChooching()
 {
   char buf[] = "║  CHOOCHING!  ║";
   lcd.writeLine(5, buf);
+  Serial.println(buf);
 }
 
 void drawStart()
 {
   char buf[] = "║ PRESS  START ║";
   lcd.writeLine(4, buf);
+  Serial.println(buf);
 }
 
 void drawPauses()
@@ -400,6 +414,7 @@ void drawPauses()
   strOut.toCharArray(buf,sizeof(strOut));
 
   lcd.writeLine(4, buf);
+  Serial.println(buf);
 }
 
 void drawInit1()
@@ -421,15 +436,19 @@ void drawPanic()
 
   strcpy(buf, "║              ║");
   lcd.writeLine(1, buf);
+  Serial.println(buf);
 
   strcpy(buf, "║    PANIC!    ║");
   lcd.writeLine(2, buf);
+  Serial.println(buf);
 
   strcpy(buf,"║      :(      ║");
   lcd.writeLine(3, buf);
+  Serial.println(buf);
 
   strcpy(buf,"║              ║");
   lcd.writeLine(4, buf);
+  Serial.println(buf);
 
   drawBoxBottom();
 }

@@ -62,15 +62,15 @@ void LCD4884::init(void)
 	delayMicroseconds(1);
 	digitalWrite(LCD_BL,HIGH);
 
-	//data_type=0, all are command bytes
-	writeByte(0x21, 0);//Function Set:0 0 1 0 0 PD V H=0010 0001;PD=0,V=0,H=1;
-	writeByte(0xc0, 0);//Set Vop:1 Vop6 Vop5 Vop4 Vop3 Vop2 Vop1 Vop0=1100 0000
-	writeByte(0x06, 0);//Set Temperature Coefficient:0 0 0 0 0 1 Tc1 Tc0=0000 0110;Tc1=1,Tc0=0(Vlcd temperature coefficient 2)
-  writeByte(0x13, 0);//Set Bias System (BSx):0 0 0 1 0 BS2 BS1 BS0=0001 0011;BS2=0, BS1=1, BS0=1==>N=4,MUX RATE=1:48
+	// data_type=0, all are command bytes
+	writeByte(0x21, 0); //Function Set:0 0 1 0 0 PD V H=0010 0001;PD=0,V=0,H=1;
+	writeByte(0xc0, 0); //Set Vop:1 Vop6 Vop5 Vop4 Vop3 Vop2 Vop1 Vop0=1100 0000
+	writeByte(0x06, 0); //Set Temperature Coefficient:0 0 0 0 0 1 Tc1 Tc0=0000 0110;Tc1=1,Tc0=0(Vlcd temperature coefficient 2)
+  writeByte(0x13, 0); //Set Bias System (BSx):0 0 0 1 0 BS2 BS1 BS0=0001 0011;BS2=0, BS1=1, BS0=1==>N=4,MUX RATE=1:48
 
-  writeByte(0x20, 0);//Function Set:0 0 1 0 0 PD V H=0010 0000;PD=0,V=0,H=0;
+  writeByte(0x20, 0); //Function Set:0 0 1 0 0 PD V H=0010 0000;PD=0,V=0,H=0;
 	clear();
-	writeByte(0x0c, 0);//Display Control: 0 0 0 0 1 D 0 E=0000 1100 ;D=1,E=0:normal mode
+	writeByte(0x0c, 0); //Display Control: 0 0 0 0 1 D 0 E=0000 1100 ;D=1,E=0:normal mode
 
 	digitalWrite(SPI_CS,LOW);
 }
@@ -79,12 +79,12 @@ void LCD4884::init(void)
  * uint8_t c character to send
  * bool dc data = true, command = false
  */
-void LCD4884::writeByte(uint8_t dat, bool dt)
+void LCD4884::writeByte(uint8_t dat, bool dc)
 {
   unsigned int i;
 	digitalWrite(SPI_CS,LOW); //Chip Enable:Active LOW
 
-  digitalWrite(LCD_DC, (dt)?HIGH:LOW);
+  digitalWrite(LCD_DC, (dc)?HIGH:LOW);
 
 	for(i=0;i<8;i++)
 	{
@@ -125,13 +125,6 @@ void LCD4884::LCD_draw_bmp_pixel(uint8_t X,uint8_t Y,unsigned char *map,
 void LCD4884::writeLine(uint8_t line, char s[])
 {
   LCD_set_XY(0, 8*line);
-  for(uint8_t i = 0; i <= sizeof(s); i++)
-    LCD_write_char(s[i]);
-}
-
-void LCD4884::LCD_write_string(uint8_t X, uint8_t Y, char s[])
-{
-  LCD_set_XY(X,Y);
   for(uint8_t i = 0; i <= sizeof(s); i++)
     LCD_write_char(s[i]);
 }
