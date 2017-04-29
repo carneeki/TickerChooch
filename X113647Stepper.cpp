@@ -104,7 +104,8 @@ void X113647Stepper::ignition()
 void X113647Stepper::setSpeed(float whatSpeed)
 {
   this->step_delay = 60L * 1000L / this->number_of_steps / whatSpeed / this->signals_per_step;
-  if(this->step_delay < this->minimum_delay) this->step_delay = this->minimum_delay;
+  if(this->step_delay < this->minimum_delay)
+    this->step_delay = this->minimum_delay;
 }
 
 /*

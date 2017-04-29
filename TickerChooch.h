@@ -16,11 +16,11 @@
 #define SPEED         1000   // Speed in mm per minute
 #define DIST_PER_REV    62.5 // Distance travelled for 1 rev of stepper shaft
 
-#define SW_LIMIT        18   // Limit switch pin is pulled HIGH when at limit
+#define SW_DIR_FWD      A4   // Forwards direction is pulled HIGH for forward
+#define SW_DIR_REV      A5   // Reverse direction is pulled HIGH for reverse
+#define SW_START         2   // Start / stop push button
+#define SW_LIMIT         3   // Limit switch pin is pulled HIGH when at limit
                              // also - use pin 2 or 3 so there's an interrupt
-#define SW_DIR_FWD      13   // Forwards direction is pulled HIGH for forward
-#define SW_DIR_REV      14   // Reverse direction is pulled HIGH for reverse
-#define SW_START        19   // Start / stop push button
 
 #define KNOB_DIST       A1   // Wiper for distance knob
 #define KNOB_PAUSE      A2   // Wiper for pause knob
@@ -44,9 +44,18 @@ uint16_t getDistance();
 uint16_t getPauseTime();
 uint16_t getSpeed();
 void getDir();
-void chooch();
+void chooch(uint16_t);
 void pause();
 void eStop();
 void startPause();
+void paint();
+
+void paintInit();
+void paintData();
+void paintRun();
+void paintPause();
+void paintPanic();
+
+char* pad(uint16_t);
 
 #endif

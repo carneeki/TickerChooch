@@ -22,7 +22,7 @@ uint16_t k_speed          = 0;  // speed knob value
 
 uint16_t distance         = 0;  // distance per chooch() cycle (mm)
 uint16_t pauseTime        = 0;  // pause time per chooch() (seconds)
-uint16_t speed            = 0;  // speed (mm / minute)
+int16_t speed             = 0;  // speed (mm / minute)
 
 bool run                  = false; // direction switch is not neutral
 bool fwd                  = true;  // fwd = true, rev = false
@@ -77,9 +77,6 @@ void loop()
   {
     doPaint = true;
     prev = millis();
-
-    Serial.print("nextState: ");
-    Serial.println(nextState);
   }
   else
     doPaint = false;
@@ -94,72 +91,41 @@ void loop()
   {
     if(doPaint)
     {
-      lcd.clear();
-
-      lcd.print("Please work!");
-      delay(2000);
-      lcd.print("Did it work?");
+      paintInit();
       delay(2000);
     }
+
     nextState = STATE_DATA;
+
   } else if(nextState == STATE_DATA)
   {
+    getDir();
+    getSpeed();
+    getPauseTime();
+    getDistance();
+
     if(doPaint)
-    {
-      lcd.clear();
-      lcd.print("STATE_DATA");
+      paintData();
 
-      getSpeed();
-      remainingSteps = calcSteps(distance);
-
-      //drawSpeed(fwd, analogRead(KNOB_SPEED));
-      //drawPause(getPauseTime());
-      //drawDistance(getDistance());
-      //drawBoxTop();
-
-      //drawStart();
-
-      //drawBoxBottom();
-    }
   } else if(nextState == STATE_RUN)
   {
     if(doPaint)
-    {
-      lcd.clear();
-      //drawSpeed(fwd, speed);;
-      //drawPause(getPauseTime());
-      //drawDistance(getDistance());
-      //drawBoxTop();
+      paintRun();
 
-      //drawChooching();
+    chooch(calcSteps(distance));
 
-      //drawBoxBottom();
-    }
-
-    chooch(calcSteps(distance)); // chooch is blocking
   } else if(nextState == STATE_PAUSE)
   {
     if(doPaint)
-    {
-      lcd.clear();
-      //drawSpeed(fwd, analogRead(KNOB_SPEED));;
-      //drawPause(pauseTime);
-      //drawDistance(distance);
-      //drawBoxTop();
+      paintPause();
 
-      //drawPauses(remainingTime);
-
-      //drawBoxBottom();
-    }
-
-    pause(); // pause is blocking (contains delay())
+    delay(pauseTime);
   }
   else
   {
     // we shouldn't ever get to this point. enter AvE mode.
     // panic. call for help.
-    lcd.clear();
-    //drawPanic();
+    paintPanic();
     delay(INT_MAX);
   }
 }
@@ -277,4 +243,96 @@ void startPause()
     nextState = STATE_DATA;
 
   Serial.println("startPause()");
+}
+
+void paintInit()
+{
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Initialising...");
+}
+
+void paintData()
+{
+  char buf[17] = "";
+  strcpy(buf, "D:");
+  strcat(buf, pad(distance));
+  strcat(buf, "  P:");
+  strcat(buf, pad(pauseTime));
+  lcd.setCursor(0,0);
+  lcd.print(buf);
+  Serial.println(buf);
+
+  strcpy(buf, "S:");
+  strcat(buf, pad(speed));
+  strcat(buf, "      ");
+  strcat(buf, "RDY");
+  lcd.setCursor(0,1);
+  lcd.print(buf);
+  Serial.println(buf);
+}
+
+void paintRun()
+{
+  char buf[17] = "";
+  strcpy(buf, "D:");
+  strcat(buf, pad(distance));
+  strcat(buf, "  P:");
+  strcat(buf, pad(pauseTime));
+  lcd.setCursor(0,0);
+  lcd.print(buf);
+  Serial.println(buf);
+
+  strcpy(buf, "S:");
+  strcat(buf, pad(speed));
+  strcat(buf, "      ");
+  strcat(buf, "RUN");
+  lcd.setCursor(0,1);
+  lcd.print(buf);
+  Serial.println(buf);
+}
+
+void paintPause()
+{
+  char buf[17] = "";
+  strcpy(buf, "D:");
+  strcat(buf, pad(distance));
+  strcat(buf, "  P:");
+  strcat(buf, pad(remainingTime));
+  lcd.setCursor(0,0);
+  lcd.print(buf);
+  Serial.println(buf);
+
+  strcpy(buf, "S:");
+  strcat(buf, pad(speed));
+  strcat(buf, "      ");
+  strcat(buf, "PAU");
+  lcd.setCursor(0,1);
+  lcd.print(buf);
+  Serial.println(buf);
+}
+
+void paintPanic()
+{
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("     PANIC!     ");
+  lcd.setCursor(0,1);
+  lcd.print("       :(       ");
+}
+
+char* pad(uint16_t data)
+{
+  char buf[8] = "";
+  char tmp[8] = "";
+  if(data < 10000)  // 4 digit numbers
+    strcat(buf, " ");
+  if(data <  1000)  // 3 digit numbers
+    strcat(buf, " ");
+  if(data <   100)  // 2 digit numbers
+    strcat(buf, " ");
+  if(data <    10)  // 1 digit numbers
+    strcat(buf, " ");
+
+  return strcat(buf, itoa(data, tmp, 10));
 }

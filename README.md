@@ -22,12 +22,12 @@ returns to STATE_DATA and is ready for data entry.
 ### Accepting data:
 ```
 /----------------\
-|D: xxxx   P: xxx|
+|D: xxxx  P: xxxx|
 |S: xxxx      RDY|
 \----------------/
 ```
-Speed will have a `-` symbol to indicate direction is reverse
-if the direction switch is set to reverse.
+Speed will have a `-` symbol to indicate direction is reversed if the direction
+switch is set to reverse.
 
 
 ## Running:
@@ -45,6 +45,13 @@ if the direction switch is set to reverse.
 |D: xxxx   P: xxx|
 |S: xxxx      PAU|
 \----------------/
+
+ D:    0   P:   0
+ S:    0      RDY
+ D:    0   P:     0
+ S:    0      RDY
+ D:    0   P:     0
+
 ```
 
 ## Panic
