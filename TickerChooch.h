@@ -3,12 +3,13 @@
 
 // TODO: Change all these values to suit
 
-// NOTE: pins 4, 5, 6, 7, 8, 9, A0 reserved for LCD screen
+// NOTE: pins 4, 5, 6, 7, 8, 9, 10, A0 reserved for LCD screen
+#define LCD_BL          10   // LCD backlight pin
 
 #define STEP_AP          8   // Stepper pin A+
 #define STEP_AN          9   // Stepper pin A-
-#define STEP_BP         10   // Stepper pin B+
-#define STEP_BN         11   // Stepper pin B-
+#define STEP_BP         11   // Stepper pin B+
+#define STEP_BN         12   // Stepper pin B-
 #define STEPS_PER_REV 2048   // Number of steps to make one complete revolution of
                              // the motor shaft
 
@@ -17,8 +18,8 @@
 
 #define SW_LIMIT        18   // Limit switch pin is pulled HIGH when at limit
                              // also - use pin 2 or 3 so there's an interrupt
-#define SW_DIR_FWD      12   // Forwards direction is pulled HIGH for forward
-#define SW_DIR_REV      13   // Reverse direction is pulled HIGH for reverse
+#define SW_DIR_FWD      13   // Forwards direction is pulled HIGH for forward
+#define SW_DIR_REV      14   // Reverse direction is pulled HIGH for reverse
 #define SW_START        19   // Start / stop push button
 
 #define KNOB_DIST       A1   // Wiper for distance knob

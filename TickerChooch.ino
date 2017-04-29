@@ -30,7 +30,7 @@ bool fwd                  = true;  // fwd = true, rev = false
 // chooch() cycle vars
 uint16_t remainingSteps   = 0;  // steps to complete in this chooch() cycle
 uint16_t remainingDist    = 0;  // remaining distance in this chooch() cycle
-uint16_t remainingTime    = 0;  //  remaining seconds in this pause() cycle
+uint16_t remainingTime    = 0;  // remaining seconds in this pause() cycle
 
 // state machine vars
 uint8_t nextState         = STATE_INIT;  // state to jump to
@@ -51,6 +51,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Rebooty party");
 
+  delay(2000);
+
   // attach the limit switch to an interrupt so we can pause
   // when the carriage reaches the end of the rail
   pinMode(SW_LIMIT, INPUT);
@@ -63,6 +65,9 @@ void setup()
   // set up other switch inputs
   pinMode(SW_DIR_FWD, INPUT);
   pinMode(SW_DIR_REV, INPUT);
+
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
 }
 
 void loop()
@@ -87,8 +92,6 @@ void loop()
    */
   if(nextState == STATE_INIT)
   {
-    nextState = STATE_DATA;
-
     if(doPaint)
     {
       lcd.clear();
@@ -98,11 +101,13 @@ void loop()
       lcd.print("Did it work?");
       delay(2000);
     }
+    nextState = STATE_DATA;
   } else if(nextState == STATE_DATA)
   {
     if(doPaint)
     {
       lcd.clear();
+      lcd.print("STATE_DATA");
 
       getSpeed();
       remainingSteps = calcSteps(distance);
@@ -131,7 +136,7 @@ void loop()
       //drawBoxBottom();
     }
 
-    chooch(); // chooch is blocking
+    chooch(calcSteps(distance)); // chooch is blocking
   } else if(nextState == STATE_PAUSE)
   {
     if(doPaint)
@@ -165,6 +170,15 @@ void loop()
 uint16_t calcSteps(uint16_t mm)
 {
   return (mm / DIST_PER_REV) * STEPS_PER_REV;
+}
+
+/**
+ * calculate the RPMs for X113647Stepper.setSpeed();
+ * Include direction component
+ */
+int16_t calcRpm(uint16_t sp)
+{
+  return (sp / DIST_PER_REV) * (fwd?1:-1);
 }
 
 /**
@@ -224,26 +238,22 @@ void getDir()
 }
 
 /**
- * Wrapper for Stepper.step(int) because it is blocking and won't
- * allow use of limit switches (well maybe an ISR could be used?)
+ * Wrapper for X113647Stepper.step()
  */
-void chooch()
+void chooch(uint16_t steps)
 {
-  if( remainingSteps >= 1 && !digitalRead(SW_LIMIT) )
-  {
-    motor.step(10);
-    remainingSteps -= 10;
-  }
+  motor.setSpeed(calcRpm(speed));
+  motor.step(steps);
 
   nextState = STATE_PAUSE;
 }
 
 /**
- * Wrapper for delay(int). Also permit limit switches to break the cycle.
+ * Wrapper for delay(int)
  */
 void pause()
 {
-  if( remainingTime >= 1 && !digitalRead(SW_LIMIT) )
+  if( remainingTime >= 1 )
   {
     delay(1000);
     remainingTime--;
