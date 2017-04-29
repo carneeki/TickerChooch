@@ -93,11 +93,10 @@ void loop()
     {
       lcd.clear();
 
-      lcd.print("Please fragging work.");
-      //drawInit1();
-      //delay(5000);
-      //drawInit2();
-      //delay(2000);
+      lcd.print("Please work!");
+      delay(2000);
+      lcd.print("Did it work?");
+      delay(2000);
     }
   } else if(nextState == STATE_DATA)
   {
