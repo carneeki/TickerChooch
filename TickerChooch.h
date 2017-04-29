@@ -1,9 +1,10 @@
+#ifndef TICKERCHOOCH_H
+#define TICKERCHOOCH_H
+
 // TODO: Change all these values to suit
 
-#ifndef TINKERCHOOCH_H
-#define TINKERCHOOCH_H
+// NOTE: pins 4, 5, 6, 7, 8, 9, A0 reserved for LCD screen
 
-// pins 2,3,4,5,6,7 used for LCD screen
 #define STEP_AP          8   // Stepper pin A+
 #define STEP_AN          9   // Stepper pin A-
 #define STEP_BP         10   // Stepper pin B+
@@ -20,9 +21,9 @@
 #define SW_DIR_REV      13   // Reverse direction is pulled HIGH for reverse
 #define SW_START        19   // Start / stop push button
 
-#define KNOB_DIST       A0   // Wiper for distance knob
-#define KNOB_PAUSE      A1   // Wiper for pause knob
-#define KNOB_SPEED      A2   // Wiper for speed knob
+#define KNOB_DIST       A1   // Wiper for distance knob
+#define KNOB_PAUSE      A2   // Wiper for pause knob
+#define KNOB_SPEED      A3   // Wiper for speed knob
 #define SPEED_MAX     1023   // Maximum speed (as analogRead())
 #define SPEED_INCR      20   // # of increments for speed
 #define DIST_MAX      1500   // Maximum distance (mm)
@@ -41,8 +42,7 @@ uint16_t calcSteps(uint16_t);
 uint16_t getDistance();
 uint16_t getPauseTime();
 uint16_t getSpeed();
-bool getRun();
-bool getDir();
+void getDir();
 void chooch();
 void pause();
 void eStop();
