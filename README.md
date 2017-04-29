@@ -18,55 +18,40 @@ While in STATE_RUN or STATE_PAUSE, if a limit switch is pressed, the machine
 returns to STATE_DATA and is ready for data entry.
 
 ## What the LCD shows for each state:
-### Boot up
-You'll just have to wait and see!
 
 ### Accepting data:
 ```
-SPEED: »████████
- DIST: 1000 mm
-PAUSE:   60 s
-╔══════════════╗
-║ PRESS  START ║
-╚══════════════╝
+/----------------\
+|D: xxxx   P: xxx|
+|S: xxxx      RDY|
+\----------------/
 ```
-Machine is accepting data. The '»' character indicates the carriage will move
-to the right at a speed indicated by the '█' characters. Movement to the left
-is indicated by a '«' character.
-
-Upon pushing start, the machine will enter the paused state to give time to
-clear the carriage.
-
-### During movements
-```
-SPEED: »████████
- DIST: 1000 mm
-PAUSE:   60 s
-╔══════════════╗
-║  CHOOCHING!  ║
-╚══════════════╝
-```
-Future revisions may include a counter to show how much travel is remaining
-each cycle.
-
-### When paused
-```
-SPEED: »████████
-  DIST: 1000 mm
- PAUSE:   60 s
-╔══════════════╗
-║ PAUSED:  03 s║
-╚══════════════╝
-```
-Note that the paused timer counts down the seconds until movement again.
+Speed will have a `-` symbol to indicate direction is reverse
+if the direction switch is set to reverse.
 
 
-### If the machine enters an unknown state.
+## Running:
 ```
-╔══════════════╗
-║              ║
-║    PANIC!    ║
-║      :(      ║
-║              ║
-╚══════════════╝
+/----------------\
+|D: xxxx   P: xxx|
+|S: xxxx      RUN|
+\----------------/
+```
+
+## Paused
+`P: ` shows remaining time
+```
+/----------------\
+|D: xxxx   P: xxx|
+|S: xxxx      PAU|
+\----------------/
+```
+
+## Panic
+When the state machine enters an unknown state
+```
+/----------------\
+|     PANIC!     |
+|       :(       |
+\----------------/
 ```
