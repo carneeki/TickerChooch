@@ -33,19 +33,23 @@ class X113647Stepper {
     // mover method:
     void step(int number_of_steps);
 
+    // emergency stop (can be called by ISR)
+    void estop();
+
     int version(void);
 
   private:
     void ignition();
     void stepMotor(int this_step);
 
-    unsigned long step_delay;    // delay between steps, in ms, based on speed
-    unsigned int minimum_delay;  // minimum delay between steps
-    int number_of_steps;         // total number of steps this motor can take
-    int step_mode;               // number of phases being used to drive the motor
-    int steps_per_cycle;         // number of steps per revolution (before gearing)
-    int signals_per_step;        // number of signals per step. when full step == 1, when half-step == 2
-    int step_number;             // which step the motor is on
+    unsigned long step_delay;     // delay between steps, in ms, based on speed
+    unsigned int minimum_delay;   // minimum delay between steps
+    int number_of_steps;          // total number of steps this motor can take
+    int step_mode;                // number of phases being used to drive the motor
+    int steps_per_cycle;          // number of steps per revolution (before gearing)
+    int signals_per_step;         // number of signals per step. when full step == 1, when half-step == 2
+    int step_number;              // which step the motor is on
+    volatile int steps_remaining; // number of steps remaining in step()
 
     // motor pin numbers:
     int motor_pin_1;
