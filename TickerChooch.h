@@ -37,12 +37,15 @@
 #define STATE_RUN        3   // run state - carriage moves
 #define STATE_PAUSE      4   // pause state between movements
 
+#define STEPS_PER_CHOOCH 2048 // how many steps per chooch() cycle
+
 #define UPDATE_TIME     50   // number of millis() between screen updates
+#define DEBOUNCE_TIME  5000  // long debounce time because using wires
 
 uint16_t calcSteps(uint16_t);
 uint16_t getDistance();
 uint16_t getPauseTime();
-uint16_t getSpeed();
+int16_t getSpeed();
 void getDir();
 void chooch(uint16_t);
 void pause();

@@ -24,16 +24,18 @@ uint16_t distance         = 0;  // distance per chooch() cycle (mm)
 uint16_t pauseTime        = 0;  // pause time per chooch() (seconds)
 int16_t speed             = 0;  // speed (mm / minute)
 
-bool run                  = false; // direction switch is not neutral
-bool fwd                  = true;  // fwd = true, rev = false
+volatile bool run                  = false; // direction switch is not neutral
+volatile bool fwd                  = true;  // fwd = true, rev = false
 
 // chooch() cycle vars
 uint16_t remainingSteps   = 0;  // steps to complete in this chooch() cycle
 uint16_t remainingDist    = 0;  // remaining distance in this chooch() cycle
-uint16_t remainingTime    = 0;  // remaining seconds in this pause() cycle
+volatile uint16_t reStartTime      = 0;  // time (in millis) pause ends
+volatile uint16_t debounce         = 0;  // millis since button press
+char isrBuf[255] = "";
 
 // state machine vars
-uint8_t nextState         = STATE_INIT;  // state to jump to
+volatile uint8_t nextState         = STATE_INIT;  // state to jump to
 
 // working and scratch values
 unsigned long prev        = 0;  // previous time the loop() ran
@@ -51,7 +53,15 @@ void setup()
   Serial.begin(115200);
   Serial.println("Rebooty party");
 
-  delay(2000);
+  // TODO: I am here for testing
+  pinMode(23, OUTPUT);
+  pinMode(33, OUTPUT);
+  pinMode(43, OUTPUT);
+  pinMode(53, OUTPUT);
+  digitalWrite(23, LOW);
+  digitalWrite(33, LOW);
+  digitalWrite(43, LOW);
+  digitalWrite(53, HIGH);
 
   // attach the limit switch to an interrupt so we can pause
   // when the carriage reaches the end of the rail
@@ -72,6 +82,13 @@ void setup()
 
 void loop()
 {
+  // show any messages from ISRs
+  if(strcmp(isrBuf,"")!=0)
+  {
+    Serial.println(isrBuf);
+    memcpy(isrBuf,"",255);
+  }
+
   // should I paint the screen?
   if(millis() - prev > UPDATE_TIME )
   {
@@ -97,30 +114,44 @@ void loop()
 
     nextState = STATE_DATA;
 
-  } else if(nextState == STATE_DATA)
+  } // end STATE_INIT
+  else if(nextState == STATE_DATA)
   {
     getDir();
     getSpeed();
     getPauseTime();
     getDistance();
+    remainingSteps = calcSteps(distance);
 
     if(doPaint)
       paintData();
 
-  } else if(nextState == STATE_RUN)
+  } // end STATE_DATA
+  else if(nextState == STATE_RUN)
   {
     if(doPaint)
       paintRun();
 
-    chooch(calcSteps(distance));
-
-  } else if(nextState == STATE_PAUSE)
+    if(remainingSteps - STEPS_PER_CHOOCH > 0 )
+      chooch(STEPS_PER_CHOOCH);
+    else
+    {
+      chooch(remainingSteps);
+      reStartTime = millis() + (1000*pauseTime);
+      nextState = STATE_PAUSE;
+    }
+  } // end STATE_RUN
+  else if(nextState == STATE_PAUSE)
   {
+    if(millis() >= reStartTime)
+    {
+      nextState = STATE_RUN;
+      Serial.println("setting state to STATE_RUN");
+      return;
+    }
     if(doPaint)
       paintPause();
-
-    delay(pauseTime);
-  }
+  } // end STATE_PAUSE
   else
   {
     // we shouldn't ever get to this point. enter AvE mode.
@@ -152,10 +183,12 @@ int16_t calcRpm(uint16_t sp)
  */
 uint16_t getDistance()
 {
+  uint16_t tmp = 0; // temporary var
+
   k_distance = analogRead(KNOB_DIST);
 
-  distance = k_distance / (1023/DIST_INCR); // round to nearest increment
-  distance = map( distance, 0, DIST_INCR, 0, DIST_MAX);
+  tmp = k_distance / (1023/DIST_INCR); // round to nearest increment
+  distance = map( tmp, 0, DIST_INCR, 0, DIST_MAX);
 
   return distance;
 }
@@ -165,19 +198,26 @@ uint16_t getDistance()
  */
 uint16_t getPauseTime()
 {
+  uint16_t tmp = 0; // temporary var
   k_pauseTime = analogRead(KNOB_PAUSE);
 
-  pauseTime = k_pauseTime / (1023/PAUSE_INCR); // round to nearest increment
-  pauseTime = map( pauseTime, 0, PAUSE_INCR, 0, PAUSE_MAX);
+  tmp = k_pauseTime / (1023/PAUSE_INCR); // round to nearest increment
+  pauseTime = map( tmp, 0, PAUSE_INCR, 0, PAUSE_MAX);
+
+  // TODO: remove me after debugging
+  pauseTime = 10;
 
   return pauseTime;
 }
 
-uint16_t getSpeed()
+int16_t getSpeed()
 {
+  int16_t tmp = 0; // temporary var for speed
+
   k_speed = analogRead(KNOB_SPEED);
-  speed = k_speed/(1023/SPEED_INCR); // round to nearest increment
-  speed = map( speed, 0, SPEED_INCR, 0, SPEED_MAX);
+  tmp = k_speed/(1023/SPEED_INCR); // round to nearest increment
+  speed = map( tmp, 0, SPEED_INCR, 0, SPEED_MAX) * (fwd?1:-1);
+
   return speed;
 }
 
@@ -210,46 +250,51 @@ void chooch(uint16_t steps)
 {
   motor.setSpeed(calcRpm(speed));
   motor.step(steps);
-
-  nextState = STATE_PAUSE;
-}
-
-/**
- * Wrapper for delay(int)
- */
-void pause()
-{
-  if( remainingTime >= 1 )
-  {
-    delay(1000);
-    remainingTime--;
-  }
-
-  nextState = STATE_RUN;
 }
 
 void eStop()
 {
+  // ignore bouncey switches
+  if(debounce >= millis() - DEBOUNCE_TIME)
+    return;
+
+  debounce = millis();
+
   nextState = STATE_DATA;
-  Serial.println("estop()");
+  memcpy(isrBuf,"estop(): Entering ready state...",255);
 }
 
 void startPause()
 {
+  // ignore bouncey switches
+  if(debounce >= millis() - DEBOUNCE_TIME)
+    return;
+
+  noInterrupts();
+  debounce = millis();
+
   if(nextState == STATE_DATA)
+  {
     nextState = STATE_PAUSE;
-
-  if(nextState == STATE_RUN)
+    reStartTime = millis() + (1000 * pauseTime);
+    memcpy(isrBuf,"startPause(): Entering pause...",255);
+  }
+  else if(nextState == STATE_RUN)
+  {
+    memcpy(isrBuf,"startPause(): Entering ready state...",255);
     nextState = STATE_DATA;
-
-  Serial.println("startPause()");
+  }
+  interrupts();
 }
 
 void paintInit()
 {
+  char buf[17] = "";
+  strcpy(buf, "Initialising...");
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("Initialising...");
+  lcd.print(buf);
+  Serial.println(buf);
 }
 
 void paintData()
@@ -298,7 +343,7 @@ void paintPause()
   strcpy(buf, "D:");
   strcat(buf, pad(distance));
   strcat(buf, "  P:");
-  strcat(buf, pad(remainingTime));
+  strcat(buf, pad( (int) (reStartTime-millis())/1000 ));
   lcd.setCursor(0,0);
   lcd.print(buf);
   Serial.println(buf);
